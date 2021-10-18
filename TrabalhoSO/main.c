@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
     int f;
     int o;
     int teste;
+    int teste2;
     return (EXIT_SUCCESS);
 }
 
