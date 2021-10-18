@@ -20,6 +20,7 @@
 int main(int argc, char** argv) {
     int f;
     int o;
+    int teste;
     return (EXIT_SUCCESS);
 }
 
