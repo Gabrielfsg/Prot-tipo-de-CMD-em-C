@@ -13,15 +13,20 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#define max 300
+
 
 /*
  * 
  */
 int main(int argc, char** argv) {
-    int f;
-    int o;
-    int teste;
-    int teste2;
-    return (EXIT_SUCCESS);
+    char comando[max];
+    do{
+        printf("Digite o comando: ");
+        gets(comando);
+        printf("\n");
+    } while (strcmp(comando,"sair") != 0);
+    return(0);
 }
 
