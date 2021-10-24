@@ -18,7 +18,8 @@
 #include <sys/types.h>
 #include <wait.h>
 #define max 300
-
+#define READ_END 0
+#define WRITE_END 1
 void execv_comando(char comando[max]){
     pid_t pid;
     pid = fork();
@@ -27,15 +28,58 @@ void execv_comando(char comando[max]){
         exit(1);
     }
     if(pid == 0){
-        int ret;
         char copia[max];
         strcpy(copia, comando);
-        char *token = strtok(comando, " ");
-        execlp(token, copia, (char *) NULL);
+        char *token = strtok(copia, " ");
+        execlp(token, comando, (char *) NULL);
     }
     if(pid > 0){
         wait(NULL);
         return;
+    }
+}
+
+void execpipe(char comando[max]) {
+    int des_p[2];
+    char comando1[max], comando2[max], copia[max];
+    strcpy(comando1, comando);
+    strcpy(comando2, comando);
+    char *token = strtok(comando1, "|");
+    strcpy(copia, comando1);
+    char *a = strtok(copia, " ");
+    return;
+    if (pipe(des_p) == -1) {
+        perror("Falha na criacao do pipe");
+        exit(1);
+    }
+    if (fork() == 0){
+        close(STDOUT_FILENO);
+        dup(des_p[WRITE_END]);
+        close(des_p[WRITE_END]);
+        close(des_p[READ_END]);
+        execlp(copia, comando1, (char *) NULL);
+        perror("Falha ao executar a primeira parte do comando");
+        exit(1);
+    }
+
+    if (fork() == 0){
+        close(STDIN_FILENO);
+        dup(des_p[READ_END]);
+        close(des_p[READ_END]);
+        close(des_p[WRITE_END]);
+        
+        char *b = strtok(comando2, "|");
+        strcpy(copia, comando2);
+        char *c = strtok(copia, " ");
+        execlp(copia, comando2, (char *) NULL);
+        perror("Falha ao executar as outras partes do comando");
+        exit(1); //se o exec der errado, fecha o processo filho B pois nÃ£o faz sentido continuar
+    }
+    else{
+        close(des_p[WRITE_END]);
+        close(des_p[READ_END]);
+        wait(NULL);
+        wait(NULL);
     }
 }
 
@@ -52,6 +96,7 @@ int main(int argc, char** argv) {
         comandoComPipe = verificaComandoPipe(comando);
         if(comandoComPipe == true){
             printf("Comando com pipe. \n");
+            execpipe(comando);
         } else{
             printf("Comando sem pipe. \n");
             execv_comando(comando);
