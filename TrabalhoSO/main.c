@@ -98,7 +98,7 @@ void execpipe(char comando[max]) {
     }
 
     if (((a = fork()) == -1)) {
-        perror("Falha na criação do fork xd! \n");
+        perror("Falha na criaÃ§Ã£o do fork xd! \n");
         exit(1);
     } else if (a == 0) {
         close(STDOUT_FILENO);
@@ -131,7 +131,7 @@ void execpipe(char comando[max]) {
     tamanho -= 1;
     while (tamanho != 0) {
         if (((b = fork()) == -1)) {
-            perror("Falha na criação do fork xd! \n");
+            perror("Falha na criaÃ§Ã£o do fork xd! \n");
             exit(1);
         }
         if (b == 0) {
@@ -139,6 +139,14 @@ void execpipe(char comando[max]) {
             dup(des_p[READ_END]);
             close(des_p[WRITE_END]);
             close(des_p[READ_END]);
+            
+            if((tamanho -1) != 0){
+                close(STDOUT_FILENO);
+                dup(des_p2[WRITE_END]);
+                close(des_p2[WRITE_END]);
+                close(des_p2[READ_END]);
+            }
+            
             char comandoSemArgumento[max];
             strcpy(comandoSemArgumento, result[i]);
             char** result2 = 0;
@@ -161,12 +169,57 @@ void execpipe(char comando[max]) {
         }
         close(des_p[WRITE_END]);
         close(des_p[READ_END]);
+        open(des_p[WRITE_END]);
+        open(des_p[READ_END]);
         waitpid(b, &wstatus, WUNTRACED);
         i++;
         tamanho--;
         if (tamanho == 0) {
             break;
         }
+        if (((a = fork()) == -1)) {
+            perror("Falha na criaÃ§Ã£o do fork xd! \n");
+            exit(1);
+        } else if (a == 0) {
+            close(STDIN_FILENO);
+            dup(des_p2[READ_END]);
+            close(des_p2[WRITE_END]);
+            close(des_p2[READ_END]);
+
+            if((tamanho -1) != 0){
+                close(STDOUT_FILENO);
+                dup(des_p[WRITE_END]);
+                close(des_p[WRITE_END]);
+                close(des_p[READ_END]);
+            }
+            
+            char comandoSemArgumento[max];
+            strcpy(comandoSemArgumento, result[i]);
+            char** result2 = 0;
+            char* temp2 = 0;
+            int tamanho2 = 0;
+            temp2 = strtok(comandoSemArgumento, " ");
+            if (temp2) {
+                result2 = malloc((tamanho2 + 1) * sizeof (char**));
+                result2[tamanho2++] = temp2;
+            }
+            while ((temp2 = strtok(0, " ")) != 0) {
+                result2 = realloc(result2, (tamanho2 + 1) * sizeof (char**));
+                result2[tamanho2++] = temp2;
+            }
+            if (tamanho2 == 1) {
+                execlp(result2[0], result2[0], (char *) 0);
+            } else {
+                execlp(result2[0], result2[0], result2[1], 0);
+            }
+        }
+        close(des_p2[WRITE_END]);
+        close(des_p2[READ_END]);
+        open(des_p2[WRITE_END]);
+        open(des_p2[READ_END]);
+        waitpid(a, &wstatus, WUNTRACED);
+        i++;
+        tamanho--;
 
     }
 
@@ -221,7 +274,7 @@ void execpipe(char comando[max]) {
     //            } else {
     //                execlp(result[0], result[0], result[1], 0);
     //            }
-    //            printf("Falha ao executar o %d ° comando", i);
+    //            printf("Falha ao executar o %d Â° comando", i);
     //        }
     //
     //
@@ -298,4 +351,3 @@ int contaCaracteres(char string[max]) {
     int cont = strlen(string);
     return cont;
 }
-
