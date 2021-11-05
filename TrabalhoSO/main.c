@@ -120,16 +120,16 @@ void execpipe(char comando[max]) {
             result2[tamanho2++] = temp2;
         }
         if (tamanho2 == 1) {
-            execlp(result2[0], result2[0], (char *)0);
+            execlp(result2[0], result2[0], (char *) 0);
         } else {
             execlp(result2[0], result2[0], result2[1], 0);
         }
     }
     int wstatus;
     int i = 1;
+    waitpid(a, &wstatus, WUNTRACED);
+    tamanho -= 1;
     while (tamanho != 0) {
-        waitpid(a, &wstatus, WUNTRACED);
-        tamanho -= 1;
         if (((b = fork()) == -1)) {
             perror("Falha na criação do fork xd! \n");
             exit(1);
@@ -153,22 +153,21 @@ void execpipe(char comando[max]) {
                 result2 = realloc(result2, (tamanho2 + 1) * sizeof (char**));
                 result2[tamanho2++] = temp2;
             }
-            printf("teste4\n");
-            printf("string: %s : \n", result2[0]);
-            printf("string: %s : \n", result2[1]);
-            printf("tamanho: %d : \n",tamanho2);
             if (tamanho2 == 1) {
-                execlp(result2[0], result2[0], (char *)0);
+                execlp(result2[0], result2[0], (char *) 0);
             } else {
                 execlp(result2[0], result2[0], result2[1], 0);
             }
         }
+        close(des_p[WRITE_END]);
+        close(des_p[READ_END]);
         waitpid(b, &wstatus, WUNTRACED);
         i++;
-        tamanho -= 1;
-        //        if(tamanho != 0){
-        //            
-        //        }
+        tamanho--;
+        if (tamanho == 0) {
+            break;
+        }
+
     }
 
 
