@@ -77,74 +77,162 @@ void execpipe(char comando[max]) {
         result = realloc(result, (tamanho + 1) * sizeof (char**));
         result[tamanho++] = temp;
     }
+    //    for (int i = 0; i < tamanho; i++) {
+    //        printf("%d - %s\n", i, result[i]);
+    //    }
+    //    printf("tamanho: %d \n", tamanho);
+    //    int numeroDePipes = tamanho - 1;
 
+    int des_p[2];
+    int des_p2[2];
+    pid_t a;
+    pid_t b;
 
-    for (int i = 0; i < tamanho; i++) {
-        printf("%d - %s\n", i, result[i]);
+    if (pipe(des_p) == -1) {
+        perror("Falha na criacao do pipe");
+        exit(1);
+    }
+    if (pipe(des_p2) == -1) {
+        perror("Falha na criacao do pipe");
+        exit(1);
+    }
+
+    if (((a = fork()) == -1)) {
+        perror("Falha na criação do fork xd! \n");
+        exit(1);
+    } else if (a == 0) {
+        close(STDOUT_FILENO);
+        dup(des_p[WRITE_END]);
+        close(des_p[WRITE_END]);
+        close(des_p[READ_END]);
+        char comandoSemArgumento[max];
+        strcpy(comandoSemArgumento, result[0]);
+        char** result2 = 0;
+        char* temp2 = 0;
+        int tamanho2 = 0;
+        temp2 = strtok(comandoSemArgumento, " ");
+        if (temp2) {
+            result2 = malloc((tamanho2 + 1) * sizeof (char**));
+            result2[tamanho2++] = temp2;
+        }
+        while ((temp2 = strtok(0, " ")) != 0) {
+            result2 = realloc(result2, (tamanho2 + 1) * sizeof (char**));
+            result2[tamanho2++] = temp2;
+        }
+        if (tamanho2 == 1) {
+            execlp(result2[0], result2[0], (char *)0);
+        } else {
+            execlp(result2[0], result2[0], result2[1], 0);
+        }
+    }
+    int wstatus;
+    int i = 1;
+    while (tamanho != 0) {
+        waitpid(a, &wstatus, WUNTRACED);
+        tamanho -= 1;
+        if (((b = fork()) == -1)) {
+            perror("Falha na criação do fork xd! \n");
+            exit(1);
+        }
+        if (b == 0) {
+            close(STDIN_FILENO);
+            dup(des_p[READ_END]);
+            close(des_p[WRITE_END]);
+            close(des_p[READ_END]);
+            char comandoSemArgumento[max];
+            strcpy(comandoSemArgumento, result[i]);
+            char** result2 = 0;
+            char* temp2 = 0;
+            int tamanho2 = 0;
+            temp2 = strtok(comandoSemArgumento, " ");
+            if (temp2) {
+                result2 = malloc((tamanho2 + 1) * sizeof (char**));
+                result2[tamanho2++] = temp2;
+            }
+            while ((temp2 = strtok(0, " ")) != 0) {
+                result2 = realloc(result2, (tamanho2 + 1) * sizeof (char**));
+                result2[tamanho2++] = temp2;
+            }
+            printf("teste4\n");
+            printf("string: %s : \n", result2[0]);
+            printf("string: %s : \n", result2[1]);
+            printf("tamanho: %d : \n",tamanho2);
+            if (tamanho2 == 1) {
+                execlp(result2[0], result2[0], (char *)0);
+            } else {
+                execlp(result2[0], result2[0], result2[1], 0);
+            }
+        }
+        waitpid(b, &wstatus, WUNTRACED);
+        i++;
+        tamanho -= 1;
+        //        if(tamanho != 0){
+        //            
+        //        }
     }
 
 
-//    printf("tamanho: %d \n",tamanho);
-//    int numeroDePipes = tamanho - 1;
-//    
-//    int des_p[2];
-//    if (pipe(des_p) == -1) {
-//        perror("Falha na criacao do pipe");
-//        exit(1);
-//    }
-    for (int i = 0; i < tamanho; i++) {
-//
-//        if (fork() == 0) {
-//            printf("%d etapa. \n", i);
-//            char comandoSemArgumento[max];
-//            printf("%s comando. \n", result[i]);
-//            strcpy(comandoSemArgumento, result[i]);
-//            char** result2 = 0;
-//            char* temp2 = 0;
-//            int tamanho2 = 0;
-//            temp2 = strtok(comandoSemArgumento, " ");
-//            if (temp2) {
-//                result2 = malloc((tamanho2 + 1) * sizeof (char**));
-//                result2[tamanho2++] = temp2;
-//            }
-//            while ((temp2 = strtok(0, " ")) != 0) {
-//                result2 = realloc(result2, (tamanho2 + 1) * sizeof (char**));
-//                result2[tamanho2++] = temp2;
-//            }
-//            
-//            if (i == 0) {
-//                close(STDOUT_FILENO);
-//                dup(des_p[WRITE_END]);
-//                close(des_p[WRITE_END]);
-//                close(des_p[READ_END]);
-//            } else if (i = tamanho - 1) {
-//                close(STDIN_FILENO);
-//                dup(des_p[READ_END]);
-//                close(des_p[READ_END]);
-//                close(des_p[READ_END]);
-//            } else {
-//                close(STDIN_FILENO);
-//                dup(des_p[READ_END]);
-//                dup(des_p[WRITE_END]);
-//                close(des_p[READ_END]);
-//                close(des_p[READ_END]);
-//            }
-//            if (tamanho2 == 1) {
-//                execlp(result2[0], result2[0], (char *) NULL);
-//            } else {
-//                execlp(result[0], result[0], result[1], 0);
-//            }
-//            printf("Falha ao executar o %d ° comando", i);
-//        }
-//
-//
-//        if (i == tamanho - 1) {
-//            close(des_p[WRITE_END]);
-//            close(des_p[READ_END]);
-//            wait(NULL);
-//            wait(NULL);
-//        }
-    }
+
+
+
+
+    //    if (pipe(des_p) == -1) {
+    //        perror("Falha na criacao do pipe");
+    //        exit(1);
+    //    }
+    //    for (int i = 0; i < tamanho; i++) {
+    //
+    //        if (fork() == 0) {
+    //            printf("%d etapa. \n", i);
+    //            char comandoSemArgumento[max];
+    //            printf("%s comando. \n", result[i]);
+    //            strcpy(comandoSemArgumento, result[i]);
+    //            char** result2 = 0;
+    //            char* temp2 = 0;
+    //            int tamanho2 = 0;
+    //            temp2 = strtok(comandoSemArgumento, " ");
+    //            if (temp2) {
+    //                result2 = malloc((tamanho2 + 1) * sizeof (char**));
+    //                result2[tamanho2++] = temp2;
+    //            }
+    //            while ((temp2 = strtok(0, " ")) != 0) {
+    //                result2 = realloc(result2, (tamanho2 + 1) * sizeof (char**));
+    //                result2[tamanho2++] = temp2;
+    //            }
+    //
+    //            if (i == 0) {
+    //                close(STDOUT_FILENO);
+    //                dup(des_p[WRITE_END]);
+    //                close(des_p[WRITE_END]);
+    //                close(des_p[READ_END]);
+    //            } else if (i = tamanho - 1) {
+    //                close(STDIN_FILENO);
+    //                dup(des_p[READ_END]);
+    //                close(des_p[READ_END]);
+    //                close(des_p[READ_END]);
+    //            } else {
+    //                close(STDIN_FILENO);
+    //                dup(des_p[READ_END]);
+    //                dup(des_p[WRITE_END]);
+    //                close(des_p[READ_END]);
+    //                close(des_p[READ_END]);
+    //            }
+    //            if (tamanho2 == 1) {
+    //                execlp(result2[0], result2[0], (char *) NULL);
+    //            } else {
+    //                execlp(result[0], result[0], result[1], 0);
+    //            }
+    //            printf("Falha ao executar o %d ° comando", i);
+    //        }
+    //
+    //
+    //        if (i == tamanho - 1) {
+    //            close(des_p[WRITE_END]);
+    //            close(des_p[READ_END]);
+    //            wait(NULL);
+    //            wait(NULL);
+    //        }
+    //    }
 }
 
 void pipeline(char ***cmd) {
