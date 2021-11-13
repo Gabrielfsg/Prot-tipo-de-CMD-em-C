@@ -33,10 +33,6 @@ void execv_comando(char comando[max]) {
         char copia[max];
         strcpy(copia, comando);
         char *token = strtok(copia, " ");
-        printf("Comando: %s\n", comando);
-        printf("copia: %s\n", copia);
-        printf("token: %s\n", token);
-
         char** result = 0;
         char* temp = 0;
         int tamanho = 0;
@@ -77,11 +73,6 @@ void execpipe(char comando[max]) {
         result = realloc(result, (tamanho + 1) * sizeof (char**));
         result[tamanho++] = temp;
     }
-    //    for (int i = 0; i < tamanho; i++) {
-    //        printf("%d - %s\n", i, result[i]);
-    //    }
-    //    printf("tamanho: %d \n", tamanho);
-    //    int numeroDePipes = tamanho - 1;
 
     int des_p[2];
     int des_p2[2];
@@ -169,8 +160,12 @@ void execpipe(char comando[max]) {
         }
         close(des_p[WRITE_END]);
         close(des_p[READ_END]);
-        open(des_p[WRITE_END]);
-        open(des_p[READ_END]);
+
+        if (pipe(des_p) == -1) {
+        perror("Falha na criacao do pipe");
+        exit(1);
+        }
+
         waitpid(b, &wstatus, WUNTRACED);
         i++;
         tamanho--;
@@ -215,108 +210,18 @@ void execpipe(char comando[max]) {
         }
         close(des_p2[WRITE_END]);
         close(des_p2[READ_END]);
-        open(des_p2[WRITE_END]);
-        open(des_p2[READ_END]);
+        
+        if (pipe(des_p2) == -1) {
+            perror("Falha na criacao do pipe");
+            exit(1);
+        }
+
         waitpid(a, &wstatus, WUNTRACED);
         i++;
         tamanho--;
-
-    }
-
-
-
-
-
-
-    //    if (pipe(des_p) == -1) {
-    //        perror("Falha na criacao do pipe");
-    //        exit(1);
-    //    }
-    //    for (int i = 0; i < tamanho; i++) {
-    //
-    //        if (fork() == 0) {
-    //            printf("%d etapa. \n", i);
-    //            char comandoSemArgumento[max];
-    //            printf("%s comando. \n", result[i]);
-    //            strcpy(comandoSemArgumento, result[i]);
-    //            char** result2 = 0;
-    //            char* temp2 = 0;
-    //            int tamanho2 = 0;
-    //            temp2 = strtok(comandoSemArgumento, " ");
-    //            if (temp2) {
-    //                result2 = malloc((tamanho2 + 1) * sizeof (char**));
-    //                result2[tamanho2++] = temp2;
-    //            }
-    //            while ((temp2 = strtok(0, " ")) != 0) {
-    //                result2 = realloc(result2, (tamanho2 + 1) * sizeof (char**));
-    //                result2[tamanho2++] = temp2;
-    //            }
-    //
-    //            if (i == 0) {
-    //                close(STDOUT_FILENO);
-    //                dup(des_p[WRITE_END]);
-    //                close(des_p[WRITE_END]);
-    //                close(des_p[READ_END]);
-    //            } else if (i = tamanho - 1) {
-    //                close(STDIN_FILENO);
-    //                dup(des_p[READ_END]);
-    //                close(des_p[READ_END]);
-    //                close(des_p[READ_END]);
-    //            } else {
-    //                close(STDIN_FILENO);
-    //                dup(des_p[READ_END]);
-    //                dup(des_p[WRITE_END]);
-    //                close(des_p[READ_END]);
-    //                close(des_p[READ_END]);
-    //            }
-    //            if (tamanho2 == 1) {
-    //                execlp(result2[0], result2[0], (char *) NULL);
-    //            } else {
-    //                execlp(result[0], result[0], result[1], 0);
-    //            }
-    //            printf("Falha ao executar o %d Â° comando", i);
-    //        }
-    //
-    //
-    //        if (i == tamanho - 1) {
-    //            close(des_p[WRITE_END]);
-    //            close(des_p[READ_END]);
-    //            wait(NULL);
-    //            wait(NULL);
-    //        }
-    //    }
-}
-
-void pipeline(char ***cmd) {
-    int fd[2];
-    pid_t pid;
-    int fdd = 0;
-
-    while (*cmd != NULL) {
-        pipe(fd);
-        if ((pid = fork()) == -1) {
-            perror("fork");
-            exit(1);
-        } else if (pid == 0) {
-            dup2(fdd, 0);
-            if (*(cmd + 1) != NULL) {
-                dup2(fd[1], 1);
-            }
-            close(fd[0]);
-            execvp((*cmd)[0], *cmd);
-            exit(1);
-        } else {
-            wait(NULL);
-            close(fd[1]);
-            fdd = fd[0];
-            cmd++;
-        }
     }
 }
 
-/*
- * 
- */
 int main(int argc, char** argv) {
     char comando[max];
     bool comandoComPipe = false;
@@ -326,10 +231,8 @@ int main(int argc, char** argv) {
         gets(comando);
         comandoComPipe = verificaComandoPipe(comando);
         if (comandoComPipe == true) {
-            printf("Comando com pipe. \n");
             execpipe(comando);
         } else {
-            printf("Comando sem pipe. \n");
             execv_comando(comando);
         }
         printf("\n");
@@ -338,7 +241,7 @@ int main(int argc, char** argv) {
 }
 
 int verificaComandoPipe(char comando[max]) {
-    bool comandoComPipe = false;
+       bool comandoComPipe = false;
     if (strstr(comando, "|")) {
         comandoComPipe = true;
         return comandoComPipe;
